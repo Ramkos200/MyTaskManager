@@ -106,10 +106,14 @@
 
         /* Completeness */
         // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
+        
         "skipLibCheck": true /* Skip type checking all .d.ts files. */,
         "baseUrl": ".",
         "paths": {
-            "@/*": ["./resources/js/*"]
+            "@/*": ["./resources/js/*"],
+            "@components/*": ["./resources/js/components/*"],
+            "@layouts/*": ["./resources/js/layouts/*"],
+            "@types/*": ["./resources/js/types/*"]
         },
         "jsx": "react-jsx"
     },
