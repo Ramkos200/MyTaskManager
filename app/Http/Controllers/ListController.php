@@ -46,7 +46,23 @@ class ListController extends Controller
         $list = TaskList::create($validated);
         return redirect()->route('lists.index')->with('success', 'List Created Successfully');
     }
+    
+    /**
+     * Get tasks for a specific list
+     */
+    public function tasks(TaskList $list)
+    {
+        // Ensure the user can only access their own lists
+        if ($list->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
+        // Use the relationship to get tasks
+        $tasks = $list->tasks;
+
+        // Return the tasks as JSON
+        return response()->json($tasks);
+    }
     /**
      * Display the specified resource.
      */

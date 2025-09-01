@@ -12,6 +12,7 @@ import { Label } from '@components/ui/label'; // Label component for forms
 import { Textarea } from '@components/ui/textarea'; // Textarea component
 import { useForm } from '@inertiajs/react'; // Form handling hook from Inertia
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select'; // Dropdown select components
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 // Interface defining the structure of a Task object
 interface Task {
@@ -25,6 +26,10 @@ interface Task {
         id: number; // List ID
         title: string; // List title
     };
+}
+interface SortOption {
+    field: 'due_date' | 'list' | 'title' | 'status';
+    direction: 'asc' | 'desc';
 }
 
 // Interface defining the structure of a List object
@@ -73,6 +78,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
     const [toastType, setToastType] = useState<'success' | 'error'>('success'); // Toast type (success/error)
     const [searchTerm, setSearchTerm] = useState(filters.search); // Search input value
     const [completionFilter, setCompletionFilter] = useState<'all' | 'completed' | 'pending'>(filters.filter as 'all' | 'completed' | 'pending'); // Completion filter state
+    const [sortOption, setSortOption] = useState<SortOption>({ field: 'due_date', direction: 'asc' });
 
     // Effect to handle flash messages from server
     useEffect(() => {
@@ -146,7 +152,37 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
     const handleDelete = (taskId: number) => {
         destroy(`/tasks/${taskId}`); // Send DELETE request
     };
+    //function to handle sorting
+    const handleSort = (field: SortOption['field']) => {
+        setSortOption(prev => ({
+            field,
+            direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+    // Add this function to sort your tasks
+    const sortedTasks = [...tasks.data].sort((a, b) => {
+        switch (sortOption.field) {
+            case 'due_date':
+                const dateA = a.due_date ? new Date(a.due_date).getTime() : Number.MAX_SAFE_INTEGER;
+                const dateB = b.due_date ? new Date(b.due_date).getTime() : Number.MAX_SAFE_INTEGER;
+                return sortOption.direction === 'asc' ? dateA - dateB : dateB - dateA;
 
+            case 'list':
+                const listCompare = a.list.title.localeCompare(b.list.title);
+                return sortOption.direction === 'asc' ? listCompare : -listCompare;
+
+            case 'title':
+                const titleCompare = a.title.localeCompare(b.title);
+                return sortOption.direction === 'asc' ? titleCompare : -titleCompare;
+
+            case 'status':
+                const statusCompare = Number(a.is_completed) - Number(b.is_completed);
+                return sortOption.direction === 'asc' ? statusCompare : -statusCompare;
+
+            default:
+                return 0;
+        }
+    });
     // Handle search form submission
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault(); // Prevent default form submission
@@ -188,7 +224,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             {/* Set page title in document head */}
             <Head title="Tasks" />
-            
+
             {/* Main content container */}
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 bg-black from-background to-muted">
                 {/* Toast notification component */}
@@ -206,16 +242,16 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                 {/* Header section with title and create button */}
                 <div className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-                    
+
                     {/* Dialog for creating/editing tasks */}
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                        <DialogTrigger asChild> 
+                        <DialogTrigger asChild>
                             <Button className="bg-primary hover:bg-primary/90 text-black shadow-lg">
                                 <Plus className="h-4 w-4 mr-2" />
                                 New Task
                             </Button>
                         </DialogTrigger>
-                        
+
                         {/* Dialog content */}
                         <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
@@ -223,7 +259,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                     {editingTask ? 'Edit Task' : 'Create New Task'}
                                 </DialogTitle>
                             </DialogHeader>
-                            
+
                             {/* Task form */}
                             <form onSubmit={handleSubmit}>
                                 <div className="space-y-4">
@@ -238,7 +274,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                             className="focus:ring-2 focus:ring-primary"
                                         />
                                     </div>
-                                    
+
                                     {/* Description textarea */}
                                     <div className="space-y-2">
                                         <Label htmlFor="description">Description</Label>
@@ -249,7 +285,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                             className="focus:ring-2 focus:ring-primary"
                                         />
                                     </div>
-                                    
+
                                     {/* List selection dropdown */}
                                     <div className="space-y-2">
                                         <Label htmlFor="lists_id">List</Label>
@@ -266,7 +302,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    
+
                                     {/* Due date input */}
                                     <div className="space-y-2">
                                         <Label htmlFor="due_date">Due Date</Label>
@@ -278,7 +314,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                             className="focus:ring-2 focus:ring-primary"
                                         />
                                     </div>
-                                    
+
                                     {/* Completion status checkbox */}
                                     <div className="flex items-center space-x-2">
                                         <input
@@ -290,7 +326,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                         />
                                         <Label htmlFor="is_completed">Completed</Label>
                                     </div>
-                                    
+
                                     {/* Submit button */}
                                     <Button
                                         type="submit"
@@ -317,7 +353,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                             className="pl-10"
                         />
                     </form>
-                    
+
                     {/* Filter dropdown */}
                     <Select value={completionFilter} onValueChange={handleFilterChange}>
                         <SelectTrigger className="w-[180px]">
@@ -338,18 +374,66 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                             {/* Table header */}
                             <thead className="[&_tr]:border-b">
                                 <tr className="border-b transition-colors hover:bg-muted/50">
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Title</th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => handleSort('title')}
+                                            className="flex items-center gap-1 p-0 hover:bg-transparent"
+                                        >
+                                            Title
+                                            {sortOption.field === 'title' && (
+                                                sortOption.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                            )}
+                                            {sortOption.field !== 'title' && <ArrowUpDown className="h-4 w-4" />}
+                                        </Button>
+                                    </th>
                                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Description</th>
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">List</th>
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Due Date</th>
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => handleSort('list')}
+                                            className="flex items-center gap-1 p-0 hover:bg-transparent"
+                                        >
+                                            List
+                                            {sortOption.field === 'list' && (
+                                                sortOption.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                            )}
+                                            {sortOption.field !== 'list' && <ArrowUpDown className="h-4 w-4" />}
+                                        </Button>
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => handleSort('due_date')}
+                                            className="flex items-center gap-1 p-0 hover:bg-transparent"
+                                        >
+                                            Due Date
+                                            {sortOption.field === 'due_date' && (
+                                                sortOption.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                            )}
+                                            {sortOption.field !== 'due_date' && <ArrowUpDown className="h-4 w-4" />}
+                                        </Button>
+                                    </th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => handleSort('status')}
+                                            className="flex items-center gap-1 p-0 hover:bg-transparent"
+                                        >
+                                            Status
+                                            {sortOption.field === 'status' && (
+                                                sortOption.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                            )}
+                                            {sortOption.field !== 'status' && <ArrowUpDown className="h-4 w-4" />}
+                                        </Button>
+                                    </th>
                                     <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
                                 </tr>
                             </thead>
-                            
+
                             {/* Table body with task data */}
                             <tbody className="[&_tr:last-child]:border-0">
-                                {tasks.data.map((task) => (
+                                {sortedTasks.map((task) => (
                                     <tr key={task.id} className="border-b transition-colors hover:bg-muted/50">
                                         <td className="p-4 align-middle font-medium">{task.title}</td>
                                         <td className="p-4 align-middle max-w-[200px] truncate">
@@ -405,9 +489,9 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                         </td>
                                     </tr>
                                 ))}
-                                
+
                                 {/* Empty state message */}
-                                {tasks.data.length === 0 && (
+                                {sortedTasks.length === 0 && (
                                     <tr>
                                         <td colSpan={6} className="p-4 text-center text-muted-foreground">
                                             No tasks found
@@ -434,7 +518,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        
+
                         {/* Page number buttons */}
                         <div className="flex items-center space-x-1">
                             {Array.from({ length: tasks.last_page }, (_, i) => i + 1).map((page) => (
@@ -448,7 +532,7 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                                 </Button>
                             ))}
                         </div>
-                        
+
                         {/* Next page button */}
                         <Button
                             variant="outline"

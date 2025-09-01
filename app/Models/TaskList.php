@@ -19,7 +19,7 @@ class TaskList extends Model
     ];
     function tasks(): HasMany
     {
-        return $this->hasMany(Task::class);
+        return $this->hasMany(Task::class, 'lists_id');
     }
     function user(): BelongsTo
     {
