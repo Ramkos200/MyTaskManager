@@ -434,9 +434,9 @@ export default function Tasksindex({ tasks, lists, filters, flash }: Props) {
                             {/* Table body with task data */}
                             <tbody className="[&_tr:last-child]:border-0">
                                 {sortedTasks.map((task) => (
-                                    <tr key={task.id} className="border-b transition-colors hover:bg-muted/50">
-                                        <td className="p-4 align-middle font-medium">{task.title}</td>
-                                        <td className="p-4 align-middle max-w-[200px] truncate">
+                                    <tr key={task.id} className="bg-white/10 border-b transition-colors hover:bg-muted/50">
+                                        <td className="p-4 align-middle font-medium ">{task.title}</td>
+                                        <td className="p-4 align-middle max-w-[200px] truncate ">
                                             {task.description || 'No description'}
                                         </td>
                                         <td className="p-4 align-middle">

@@ -235,6 +235,23 @@ function PageHeader({ onAddList }: { onAddList: () => void }) {
     </div>
   );
 }
+//cards color generator
+const getCardColor = (index: number) => {
+  const colors = [
+    'bg-blue-100 border-blue-200 hover:bg-blue-200/50',
+    'bg-green-100 border-green-200 hover:bg-green-200/50',
+    'bg-yellow-100 border-yellow-200 hover:bg-yellow-200/50',
+    'bg-red-100 border-red-200 hover:bg-red-200/50',
+    'bg-purple-100 border-purple-200 hover:bg-purple-200/50',
+    'bg-pink-100 border-pink-200 hover:bg-pink-200/50',
+    'bg-indigo-100 border-indigo-200 hover:bg-indigo-200/50',
+    'bg-teal-100 border-teal-200 hover:bg-teal-200/50',
+    'bg-orange-100 border-orange-200 hover:bg-orange-200/50',
+    'bg-cyan-100 border-cyan-200 hover:bg-cyan-200/50',
+  ];
+
+  return colors[index % colors.length];
+};
 
 // Props interface for ListDialog component
 interface ListDialogProps {
@@ -347,7 +364,6 @@ function TasksDialog({ isOpen, onOpenChange, list }: TasksDialogProps) {
 }
 
 // Task Item Component - displays individual task in the tasks dialog
-// Task Item Component - displays individual task in the tasks dialog
 function TaskItem({ task }: { task: Task }) {
   // Function to truncate text to first 10 words
   const truncateText = (text: string | null, maxWords: number) => {
@@ -408,17 +424,19 @@ function ListsGrid({ lists, onEditList, onDeleteList, onListClick }: ListsGridPr
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {lists.map((list) => (
+      {lists.map((list, index) => ( // Add index parameter
         <ListCard
           key={list.id}
           list={list}
           onEdit={onEditList}
           onDelete={onDeleteList}
-          onClick={onListClick} // Pass click handler to card
+          onClick={onListClick}
+          index={index} // Pass the index to ListCard
         />
       ))}
     </div>
   );
+
 }
 
 // List Card Component
@@ -426,20 +444,24 @@ function ListCard({
   list,
   onEdit,
   onDelete,
-  onClick // Add onClick prop
+  onClick,
+  index // Add index prop
 }: {
   list: TaskList;
   onEdit: (list: TaskList) => void;
   onDelete: (listId: number) => void;
-  onClick: (list: TaskList) => void; // Add onClick prop
+  onClick: (list: TaskList) => void;
+  index: number; // Add index to determine color
 }) {
+  const cardColor = getCardColor(index);
+
   return (
     <Card
-      className="hover:bg-accent/50 transition-colors cursor-pointer" // Add cursor pointer
-      onClick={() => onClick(list)} // Handle click on the entire card
+      className={`${cardColor} transition-colors cursor-pointer`} // Apply color classes
+      onClick={() => onClick(list)}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium line-clamp-1">
+        <CardTitle className="text-lg font-medium line-clamp-1 text-black">
           {list.title}
         </CardTitle>
         <div className="flex gap-2">
@@ -447,18 +469,18 @@ function ListCard({
             variant="ghost"
             size="icon"
             onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering card click
+              e.stopPropagation();
               onEdit(list);
             }}
             title="Edit list"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4 text-black" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering card click
+              e.stopPropagation();
               onDelete(list.id);
             }}
             className="text-destructive hover:text-destructive/90"
@@ -470,7 +492,7 @@ function ListCard({
       </CardHeader>
 
       <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-sm  line-clamp-2 text-gray-500">
           {list.description || 'No description provided'}
         </p>
 
