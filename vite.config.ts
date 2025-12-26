@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
-import { resolve } from 'path'; // Add this import
+import { resolve } from 'path'; 
 
 export default defineConfig({
     plugins: [
@@ -14,10 +14,16 @@ export default defineConfig({
         }),
         react(),
         tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
+        // wayfinder({
+        //     formVariants: true,
+        // }),
     ],
+     server: {
+        host: '0.0.0.0',  // Important for Codespaces
+        hmr: {
+            host: 'localhost',
+        },
+    },
     esbuild: {
         jsx: 'automatic',
     },
